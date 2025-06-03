@@ -140,9 +140,22 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // 注意：userId, username, accountNumber, createdAt 通常不提供setter，因为它们是唯一标识或创建时生成
-    // 但是，如果需要从数据库加载时设置，可以在第二个构造函数中包含。
-    // For simplicity, we'll keep it immutable after creation for these fields.
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }

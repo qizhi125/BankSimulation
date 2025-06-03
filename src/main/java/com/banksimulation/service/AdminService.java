@@ -4,7 +4,9 @@ import com.banksimulation.dao.DataAccessObject;
 import com.banksimulation.entity.ActorType;
 import com.banksimulation.entity.OperationLog;
 import com.banksimulation.entity.User;
-import com.banksimulation.util.PasswordHasher; // 稍后创建这个工具类
+import com.banksimulation.entity.Admin; // 导入 Admin 类
+import com.banksimulation.entity.TransactionRecord; // 导入 TransactionRecord 类
+import com.banksimulation.util.PasswordHasher;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,7 @@ import java.util.Optional;
 public class AdminService {
 
     private final DataAccessObject dao;
-    private final LoggingService loggingService; // 依赖日志服务
+    private final LoggingService loggingService;
 
     public AdminService(DataAccessObject dao, LoggingService loggingService) {
         this.dao = dao;
@@ -37,7 +39,12 @@ public class AdminService {
             loggingService.logAdminAction(adminUsername, "Create user failed", "Username '" + user.getUsername() + "' already exists.");
             return false;
         }
-        // 密码哈希处理 (在实际应用中，传入的user对象中的passwordHash应是哈希过的)
+        if (dao.getUserByAccountNumber(user.getAccountNumber()).isPresent()) {
+            System.out.println("Admin '" + adminUsername + "' failed to create user: Account number '" + user.getAccountNumber() + "' already exists.");
+            loggingService.logAdminAction(adminUsername, "Create user failed", "Account number '" + user.getAccountNumber() + "' already exists.");
+            return false;
+        }
+
         dao.saveUser(user);
         System.out.println("Admin '" + adminUsername + "' created new user: " + user.getUsername());
         loggingService.logAdminAction(adminUsername, "User created", "Created user: " + user.getUsername());
@@ -137,5 +144,18 @@ public class AdminService {
         System.out.println("Admin '" + adminUsername + "' retrieved all users list.");
         loggingService.logAdminAction(adminUsername, "Get all users", "Retrieved " + users.size() + " users.");
         return users;
+    }
+
+    /**
+     * 获取所有交易记录
+     * Retrieves all transaction records.
+     * @param adminUsername The username of the admin performing the action.
+     * @return A list of all TransactionRecord objects.
+     */
+    public List<TransactionRecord> getAllTransactions(String adminUsername) {
+        List<TransactionRecord> transactions = dao.getAllTransactions();
+        System.out.println("Admin '" + adminUsername + "' retrieved all transaction records.");
+        loggingService.logAdminAction(adminUsername, "Get all transactions", "Retrieved " + transactions.size() + " transactions.");
+        return transactions;
     }
 }

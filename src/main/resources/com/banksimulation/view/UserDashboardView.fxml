@@ -3,8 +3,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -14,139 +12,151 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.control.PasswordField?>
-
-<AnchorPane prefHeight="650.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.banksimulation.view.UserDashboardController">
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.RowConstraints?> <AnchorPane prefHeight="650.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.banksimulation.view.UserDashboardController">
     <children>
-        <VBox alignment="TOP_CENTER" prefHeight="650.0" prefWidth="900.0" spacing="20.0" style="-fx-background-color: #F8F8F8;">
-            <padding>
-                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-            </padding>
-            <Label text="用户仪表板" textFill="#2c3e50">
-                <font>
-                    <Font name="System Bold" size="30.0" />
-                </font>
-            </Label>
-            <Label fx:id="welcomeLabel" text="欢迎，[用户名]！" textFill="#34495e">
-                <font>
-                    <Font size="18.0" />
-                </font>
-            </Label>
-            <TabPane prefHeight="480.0" prefWidth="860.0" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" style="-fx-tab-min-width: 120px; -fx-tab-max-width: 120px;"> <tabs>
-                <Tab text="账户概览">
-                    <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <VBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="400.0" prefWidth="760.0" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                    <children>
-                                        <GridPane hgap="10.0" vgap="10.0">
-                                            <columnConstraints>
-                                                <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                                <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
-                                            </columnConstraints>
-                                            <rowConstraints>
-                                                <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                            </rowConstraints>
-                                            <children>
-                                                <Label text="用户名:" />
-                                                <Label fx:id="usernameLabel" text="-" GridPane.columnIndex="1" />
-                                                <Label text="账号:" GridPane.rowIndex="1" />
-                                                <Label fx:id="accountNumberLabel" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                <Label text="当前余额:" GridPane.rowIndex="2" />
-                                                fx:id="balanceLabel" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                <Label text="账户状态:" GridPane.rowIndex="3" />
-                                                <Label fx:id="statusLabel" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                            </children>
-                                        </GridPane>
-                                        <Button onAction="#refreshAccountInfo" style="-fx-background-color: #5DADE2; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 0);" text="刷新账户信息" />
-                                    </children>
-                                </VBox>
-                            </children>
-                        </AnchorPane>
-                    </content>
-                </Tab>
-                <Tab text="存款">
-                    <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <VBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="400.0" prefWidth="760.0" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                    <children>
-                                        <Label text="存款金额:" />
-                                        <TextField fx:id="depositAmountField" promptText="请输入存款金额" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0;" />
-                                        <Button onAction="#handleDeposit" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 0);" text="存款" />
-                                        <Label fx:id="depositMessageLabel" textFill="RED" />
-                                    </children>
-                                </VBox>
-                            </children>
-                        </AnchorPane>
-                    </content>
-                </Tab>
-                <Tab text="取款">
-                    <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <VBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="400.0" prefWidth="760.0" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                    <children>
-                                        <Label text="取款金额:" />
-                                        <TextField fx:id="withdrawAmountField" promptText="请输入取款金额" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0;" />
-                                        <Button onAction="#handleWithdraw" style="-fx-background-color: #E74C3C; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 0);" text="取款" />
-                                        <Label fx:id="withdrawMessageLabel" textFill="RED" />
-                                    </children>
-                                </VBox>
-                            </children>
-                        </AnchorPane>
-                    </content>
-                </Tab>
-                <Tab text="交易记录">
-                    <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <VBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="400.0" prefWidth="760.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                    <children>
-                                        <Button onAction="#refreshTransactionHistory" style="-fx-background-color: #5DADE2; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 0);" text="刷新交易记录" />
-                                        <TableView fx:id="transactionTable" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
-                                            <columns>
-                                                <TableColumn fx:id="colTimestamp" prefWidth="150.0" text="时间" />
-                                                <TableColumn fx:id="colType" prefWidth="100.0" text="类型" />
-                                                <TableColumn fx:id="colAmount" prefWidth="100.0" text="金额" />
-                                                <TableColumn fx:id="colBalanceAfter" prefWidth="120.0" text="交易后余额" />
-                                                <TableColumn fx:id="colDescription" prefWidth="250.0" text="描述" />
-                                            </columns>
-                                        </TableView>
-                                        <Label fx:id="transactionMessageLabel" textFill="RED" />
-                                    </children>
-                                </VBox>
-                            </children>
-                        </AnchorPane>
-                    </content>
-                </Tab>
-                <Tab text="修改密码">
-                    <content>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                            <children>
-                                <VBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="400.0" prefWidth="760.0" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                    <children>
-                                        <Label text="旧密码:" />
-                                        <PasswordField fx:id="oldPasswordField" promptText="请输入旧密码" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0;" />
-                                        <Label text="新密码:" />
-                                        <PasswordField fx:id="newPasswordField" promptText="请输入新密码" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0;" />
-                                        <Label text="确认新密码:" />
-                                        <PasswordField fx:id="confirmNewPasswordField" promptText="请再次输入新密码" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0;" />
-                                        <Button onAction="#handleChangePassword" style="-fx-background-color: #F39C12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 0);" text="修改密码" />
-                                        <Label fx:id="passwordMessageLabel" textFill="RED" />
-                                    </children>
-                                </VBox>
-                            </children>
-                        </AnchorPane>
-                    </content>
-                </Tab>
-            </tabs>
-            </TabPane>
-            <HBox alignment="CENTER" spacing="20.0">
-                <Button onAction="#handleLogout" style="-fx-background-color: #95A5A6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 0);" text="注销" />
-            </HBox>
-        </VBox>
+        <HBox alignment="TOP_LEFT" prefHeight="650.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <VBox prefWidth="180.0" HBox.hgrow="NEVER" style="-fx-background-color: #2c3e50; -fx-padding: 20;">
+                <spacing>15.0</spacing>
+                <children>
+                    <Label text="用户面板" textFill="WHITE">
+                        <font>
+                            <Font name="System Bold" size="20.0" />
+                        </font>
+                        <VBox.margin>
+                            <Insets bottom="15.0" />
+                        </VBox.margin>
+                    </Label>
+                    <Label fx:id="welcomeLabel" text="欢迎，用户！" textFill="#bdc3c7">
+                        <font>
+                            <Font size="13.0" />
+                        </font>
+                        <VBox.margin>
+                            <Insets bottom="25.0" />
+                        </VBox.margin>
+                    </Label>
+                    <Button fx:id="navAccountOverviewButton" onAction="#showAccountOverview" prefWidth="160.0" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 0;" text="账户概览" />
+                    <Button fx:id="navDepositButton" onAction="#showDeposit" prefWidth="160.0" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 0;" text="存款" />
+                    <Button fx:id="navWithdrawButton" onAction="#showWithdraw" prefWidth="160.0" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 0;" text="取款" />
+                    <Button fx:id="navTransactionHistoryButton" onAction="#showTransactionHistory" prefWidth="160.0" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 0;" text="交易记录" />
+                    <Button fx:id="navChangePasswordButton" onAction="#showChangePassword" prefWidth="160.0" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 0;" text="修改密码" />
+                    <Region VBox.vgrow="ALWAYS" /> <Button onAction="#handleLogout" prefWidth="160.0" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 0;" text="注销" />
+                </children>
+            </VBox>
+
+            <StackPane HBox.hgrow="ALWAYS" style="-fx-background-color: #F8F8F8;">
+                <padding>
+                    <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                </padding>
+
+                <VBox fx:id="accountOverviewPanel" alignment="TOP_CENTER" spacing="20.0" visible="true" StackPane.alignment="TOP_CENTER">
+                    <Label text="账户概览" textFill="#2c3e50">
+                        <font>
+                            <Font name="System Bold" size="24.0" />
+                        </font>
+                        <VBox.margin>
+                            <Insets bottom="20.0" />
+                        </VBox.margin>
+                    </Label>
+                    <GridPane hgap="10.0" vgap="10.0" alignment="CENTER">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                        </rowConstraints>
+                        <children>
+                            <Label text="用户名:" style="-fx-font-size: 14px;" />
+                            <Label fx:id="usernameLabel" text="-" GridPane.columnIndex="1" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
+                            <Label text="账号:" GridPane.rowIndex="1" style="-fx-font-size: 14px;" />
+                            <Label fx:id="accountNumberLabel" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
+                            <Label text="当前余额:" GridPane.rowIndex="2" style="-fx-font-size: 14px;" />
+                            <Label fx:id="balanceLabel" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #27ae60;" />
+                            <Label text="账户状态:" GridPane.rowIndex="3" style="-fx-font-size: 14px;" />
+                            <Label fx:id="statusLabel" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-font-size: 14px; -fx-font-weight: bold;" />
+                        </children>
+                    </GridPane>
+                    <Button onAction="#refreshAccountInfo" style="-fx-background-color: #5DADE2; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="刷新账户信息" />
+                </VBox>
+
+                <VBox fx:id="depositPanel" alignment="TOP_CENTER" spacing="20.0" visible="false" StackPane.alignment="TOP_CENTER">
+                    <Label text="存款" textFill="#2c3e50">
+                        <font>
+                            <Font name="System Bold" size="24.0" />
+                        </font>
+                        <VBox.margin>
+                            <Insets bottom="20.0" />
+                        </VBox.margin>
+                    </Label>
+                    <Label text="存款金额:" style="-fx-font-size: 14px;" />
+                    <TextField fx:id="depositAmountField" promptText="请输入存款金额" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0; -fx-padding: 8 10; -fx-max-width: 300;" />
+                    <Button onAction="#handleDeposit" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="存款" />
+                    <Label fx:id="depositMessageLabel" textFill="RED" />
+                </VBox>
+
+                <VBox fx:id="withdrawPanel" alignment="TOP_CENTER" spacing="20.0" visible="false" StackPane.alignment="TOP_CENTER">
+                    <Label text="取款" textFill="#2c3e50">
+                        <font>
+                            <Font name="System Bold" size="24.0" />
+                        </font>
+                        <VBox.margin>
+                            <Insets bottom="20.0" />
+                        </VBox.margin>
+                    </Label>
+                    <Label text="取款金额:" style="-fx-font-size: 14px;" />
+                    <TextField fx:id="withdrawAmountField" promptText="请输入取款金额" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0; -fx-padding: 8 10; -fx-max-width: 300;" />
+                    <Button onAction="#handleWithdraw" style="-fx-background-color: #E74C3C; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="取款" />
+                    <Label fx:id="withdrawMessageLabel" textFill="RED" />
+                </VBox>
+
+                <VBox fx:id="transactionHistoryPanel" alignment="TOP_CENTER" spacing="20.0" visible="false" StackPane.alignment="TOP_CENTER">
+                    <Label text="交易记录" textFill="#2c3e50">
+                        <font>
+                            <Font name="System Bold" size="24.0" />
+                        </font>
+                        <VBox.margin>
+                            <Insets bottom="20.0" />
+                        </VBox.margin>
+                    </Label>
+                    <Button onAction="#refreshTransactionHistory" style="-fx-background-color: #5DADE2; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="刷新交易记录" />
+                    <TableView fx:id="transactionTable" prefHeight="400.0" prefWidth="700.0" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colTimestamp" prefWidth="150.0" text="时间" />
+                            <TableColumn fx:id="colType" prefWidth="100.0" text="类型" />
+                            <TableColumn fx:id="colAmount" prefWidth="100.0" text="金额" />
+                            <TableColumn fx:id="colBalanceAfter" prefWidth="120.0" text="交易后余额" />
+                            <TableColumn fx:id="colDescription" prefWidth="250.0" text="描述" />
+                        </columns>
+                    </TableView>
+                    <Label fx:id="transactionMessageLabel" textFill="RED" />
+                </VBox>
+
+                <VBox fx:id="changePasswordPanel" alignment="TOP_CENTER" spacing="20.0" visible="false" StackPane.alignment="TOP_CENTER">
+                    <Label text="修改密码" textFill="#2c3e50">
+                        <font>
+                            <Font name="System Bold" size="24.0" />
+                        </font>
+                        <VBox.margin>
+                            <Insets bottom="20.0" />
+                        </VBox.margin>
+                    </Label>
+                    <Label text="旧密码:" style="-fx-font-size: 14px;" />
+                    <PasswordField fx:id="oldPasswordField" promptText="请输入旧密码" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0; -fx-padding: 8 10; -fx-max-width: 300;" />
+                    <Label text="新密码:" style="-fx-font-size: 14px;" />
+                    <PasswordField fx:id="newPasswordField" promptText="请输入新密码" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0; -fx-padding: 8 10; -fx-max-width: 300;" />
+                    <Label text="确认新密码:" style="-fx-font-size: 14px;" />
+                    <PasswordField fx:id="confirmNewPasswordField" promptText="请再次输入新密码" style="-fx-background-radius: 5; -fx-border-radius: 5; -fx-border-color: #D0D0D0; -fx-padding: 8 10; -fx-max-width: 300;" />
+                    <Button onAction="#handleChangePassword" style="-fx-background-color: #F39C12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="修改密码" />
+                    <Label fx:id="passwordMessageLabel" textFill="RED" />
+                </VBox>
+
+            </StackPane>
+        </HBox>
     </children>
 </AnchorPane>

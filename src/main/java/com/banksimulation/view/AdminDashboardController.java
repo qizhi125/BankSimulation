@@ -1,8 +1,9 @@
 package com.banksimulation.view;
 
-import com.banksimulation.entity.ActorType;
+import com.banksimulation.App;
 import com.banksimulation.entity.Admin;
 import com.banksimulation.entity.OperationLog;
+import com.banksimulation.entity.TransactionRecord; // Import TransactionRecord
 import com.banksimulation.entity.User;
 import com.banksimulation.service.AdminService;
 import com.banksimulation.service.LoggingService;
@@ -19,15 +20,19 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.PasswordField; // 导入 PasswordField
-import javafx.scene.layout.GridPane; // 导入 GridPane
-import javafx.scene.control.CheckBox; // 导入 CheckBox
+import javafx.scene.control.PasswordField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.control.CheckBox;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import javafx.scene.paint.Color;
+import javafx.scene.layout.VBox; // Import VBox
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -37,7 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * 管理员仪表板控制器
+ * Administrator Dashboard Controller
  * Controller for the admin dashboard view.
  */
 public class AdminDashboardController {
@@ -64,33 +69,90 @@ public class AdminDashboardController {
     @FXML private TableColumn<OperationLog, String> colDetails;
     @FXML private Label logMessageLabel;
 
+    // FXML elements for permission control
+    @FXML private Button refreshUserListButton;
+    @FXML private Button createUserButton;
+    @FXML private Button toggleActiveButton;
+    @FXML private Button modifyPermissionsButton;
+    @FXML private Button deleteUserButton;
+    @FXML private Button refreshLogsButton;
+    @FXML private Button exportLogsButton;
+
+    // New navigation buttons
+    @FXML private javafx.scene.control.Button navUserManagementButton;
+    @FXML private javafx.scene.control.Button navLogViewButton;
+
+    // New panel containers
+    @FXML private VBox userManagementPanel;
+    @FXML private VBox logViewPanel;
+
 
     private final AdminService adminService;
-    private final UserService userService; // 尽管主要用于用户操作，但在这里传递以便后续导航
+    private final UserService userService;
     private final LoggingService loggingService;
     private final Stage primaryStage;
-    private Admin currentAdmin; // 当前登录的管理员
+    private Admin loggedInAdmin; // Current logged-in administrator object (Admin instance)
 
-    // 构造函数，通过App类进行依赖注入
+    // Constructor, dependency injection via App class
     public AdminDashboardController(AdminService adminService, UserService userService,
-                                    LoggingService loggingService, Stage primaryStage, Admin currentAdmin) {
+                                    LoggingService loggingService, Stage primaryStage, Admin loggedInAdmin) {
         this.adminService = adminService;
         this.userService = userService;
         this.loggingService = loggingService;
         this.primaryStage = primaryStage;
-        this.currentAdmin = currentAdmin;
+        this.loggedInAdmin = loggedInAdmin; // Receive Admin object
     }
 
     @FXML
     public void initialize() {
-        if (currentAdmin != null) {
-            welcomeLabel.setText("欢迎，管理员 " + currentAdmin.getUsername() + "！");
+        if (loggedInAdmin != null) {
+            welcomeLabel.setText("欢迎，管理员 " + loggedInAdmin.getUsername() + "！");
+            applyPermissionsToUI(); // Temporarily not implementing fine-grained permission control
             setupUserTable();
-            refreshUserList(null);
             setupLogTable();
-            refreshLogs(null);
+            // Show user management panel by default
+            showUserManagement(null);
         }
     }
+
+    /**
+     * Dynamically adjusts the visibility and availability of UI elements based on the current logged-in administrator's permissions.
+     * Note: The current Admin entity does not have fine-grained permission fields, this is just a placeholder.
+     * Actual permission control should be implemented in AdminService.
+     */
+    private void applyPermissionsToUI() {
+        if (loggedInAdmin == null) {
+            System.err.println("Error: loggedInAdmin is null in applyPermissionsToUI.");
+            return;
+        }
+
+        // By default, all administrators have these permissions, unless corresponding boolean fields are added to the Admin entity
+        // For example:
+        // createUserButton.setManaged(loggedInAdmin.canCreateUsers());
+        // createUserButton.setVisible(loggedInAdmin.canCreateUsers());
+
+        // For simplicity, all administrator UI elements are currently visible, actual permission control is in the service layer
+        createUserButton.setManaged(true);
+        createUserButton.setVisible(true);
+        toggleActiveButton.setManaged(true);
+        toggleActiveButton.setVisible(true);
+        modifyPermissionsButton.setManaged(true);
+        modifyPermissionsButton.setVisible(true);
+        deleteUserButton.setManaged(true);
+        deleteUserButton.setVisible(true);
+        refreshLogsButton.setManaged(true);
+        refreshLogsButton.setVisible(true);
+        exportLogsButton.setManaged(true);
+        exportLogsButton.setVisible(true);
+        logTable.setManaged(true);
+        logTable.setVisible(true);
+
+        navUserManagementButton.setManaged(true);
+        navUserManagementButton.setVisible(true);
+        navLogViewButton.setManaged(true);
+        navLogViewButton.setVisible(true);
+    }
+
 
     private void setupUserTable() {
         colUserId.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getUserId()));
@@ -115,7 +177,7 @@ public class AdminDashboardController {
 
     @FXML
     private void refreshUserList(ActionEvent event) {
-        List<User> users = adminService.getAllUsers(currentAdmin.getUsername());
+        List<User> users = adminService.getAllUsers(loggedInAdmin.getUsername());
         ObservableList<User> observableUsers = FXCollections.observableArrayList(users);
         userTable.setItems(observableUsers);
         userManagementMessageLabel.setText("");
@@ -123,9 +185,6 @@ public class AdminDashboardController {
 
     @FXML
     private void handleCreateUser(ActionEvent event) {
-        // 弹出对话框让管理员输入新用户的信息
-        // 简化处理：直接在控制台模拟输入或弹出一个简单的输入框
-        // 实际应用中，这里会弹出一个新的 Stage 或 Dialog
         Alert createUserDialog = new Alert(Alert.AlertType.CONFIRMATION);
         createUserDialog.setTitle("创建新用户");
         createUserDialog.setHeaderText("请输入新用户详情");
@@ -168,25 +227,25 @@ public class AdminDashboardController {
 
             if (username.isEmpty() || password.isEmpty() || accountNumber.isEmpty()) {
                 userManagementMessageLabel.setText("创建用户失败：用户名、密码和账号不能为空。");
-                userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+                userManagementMessageLabel.setTextFill(Color.RED);
                 return;
             }
             if (accountNumber.length() != 10 || !accountNumber.matches("\\d+")) {
                 userManagementMessageLabel.setText("创建用户失败：账号必须是10位数字。");
-                userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+                userManagementMessageLabel.setTextFill(Color.RED);
                 return;
             }
 
             String hashedPassword = PasswordHasher.hashPassword(password);
             User newUser = new User(username, hashedPassword, firstName, lastName, accountNumber);
 
-            if (adminService.createUser(currentAdmin.getUsername(), newUser)) {
+            if (adminService.createUser(loggedInAdmin.getUsername(), newUser)) {
                 userManagementMessageLabel.setText("用户 '" + username + "' 创建成功！");
-                userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.GREEN);
-                refreshUserList(null); // 刷新用户列表
+                userManagementMessageLabel.setTextFill(Color.GREEN);
+                refreshUserList(null); // Refresh user list
             } else {
                 userManagementMessageLabel.setText("创建用户失败：用户名或账号可能已存在。");
-                userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+                userManagementMessageLabel.setTextFill(Color.RED);
             }
         }
     }
@@ -196,18 +255,18 @@ public class AdminDashboardController {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
         if (selectedUser == null) {
             userManagementMessageLabel.setText("请选择一个用户。");
-            userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+            userManagementMessageLabel.setTextFill(Color.RED);
             return;
         }
 
         boolean newStatus = !selectedUser.isActive();
-        if (adminService.toggleUserLoginStatus(currentAdmin.getUsername(), selectedUser.getUsername(), newStatus)) {
+        if (adminService.toggleUserLoginStatus(loggedInAdmin.getUsername(), selectedUser.getUsername(), newStatus)) {
             userManagementMessageLabel.setText("用户 '" + selectedUser.getUsername() + "' 登录状态已切换为 " + (newStatus ? "激活" : "禁用") + "。");
-            userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.GREEN);
-            refreshUserList(null); // 刷新用户列表
+            userManagementMessageLabel.setTextFill(Color.GREEN);
+            refreshUserList(null); // Refresh user list
         } else {
             userManagementMessageLabel.setText("切换登录状态失败。");
-            userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+            userManagementMessageLabel.setTextFill(Color.RED);
         }
     }
 
@@ -216,7 +275,7 @@ public class AdminDashboardController {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
         if (selectedUser == null) {
             userManagementMessageLabel.setText("请选择一个用户。");
-            userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+            userManagementMessageLabel.setTextFill(Color.RED);
             return;
         }
 
@@ -228,9 +287,9 @@ public class AdminDashboardController {
         grid.setHgap(10);
         grid.setVgap(10);
 
-        javafx.scene.control.CheckBox canDepositCheckbox = new javafx.scene.control.CheckBox("允许存款");
+        CheckBox canDepositCheckbox = new CheckBox("允许存款");
         canDepositCheckbox.setSelected(selectedUser.canDeposit());
-        javafx.scene.control.CheckBox canWithdrawCheckbox = new javafx.scene.control.CheckBox("允许取款");
+        CheckBox canWithdrawCheckbox = new CheckBox("允许取款");
         canWithdrawCheckbox.setSelected(selectedUser.canWithdraw());
 
         grid.add(canDepositCheckbox, 0, 0);
@@ -244,13 +303,13 @@ public class AdminDashboardController {
             newPermissions.put("canDeposit", canDepositCheckbox.isSelected());
             newPermissions.put("canWithdraw", canWithdrawCheckbox.isSelected());
 
-            if (adminService.modifyUserPermissions(currentAdmin.getUsername(), selectedUser.getUsername(), newPermissions)) {
+            if (adminService.modifyUserPermissions(loggedInAdmin.getUsername(), selectedUser.getUsername(), newPermissions)) {
                 userManagementMessageLabel.setText("用户 '" + selectedUser.getUsername() + "' 权限修改成功！");
-                userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.GREEN);
-                refreshUserList(null); // 刷新用户列表
+                userManagementMessageLabel.setTextFill(Color.GREEN);
+                refreshUserList(null); // Refresh user list
             } else {
                 userManagementMessageLabel.setText("修改权限失败。");
-                userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+                userManagementMessageLabel.setTextFill(Color.RED);
             }
         }
     }
@@ -260,7 +319,7 @@ public class AdminDashboardController {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
         if (selectedUser == null) {
             userManagementMessageLabel.setText("请选择一个用户。");
-            userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+            userManagementMessageLabel.setTextFill(Color.RED);
             return;
         }
 
@@ -271,11 +330,11 @@ public class AdminDashboardController {
 
         Optional<ButtonType> result = confirmDelete.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            // 直接通过loggingService.getDao()访问DAO来删除用户
+            // Access DAO directly through loggingService.getDao() to delete user
             loggingService.getDao().deleteUser(selectedUser.getUserId());
             userManagementMessageLabel.setText("用户 '" + selectedUser.getUsername() + "' 已删除。");
-            userManagementMessageLabel.setTextFill(javafx.scene.paint.Color.GREEN);
-            refreshUserList(null); // 刷新用户列表
+            userManagementMessageLabel.setTextFill(Color.GREEN);
+            refreshUserList(null); // Refresh user list
         }
     }
 
@@ -289,14 +348,14 @@ public class AdminDashboardController {
 
     @FXML
     private void handleExportLogs(ActionEvent event) {
-        // 简单导出到项目根目录下的 logs.csv 文件
+        // Export to logs.csv file in the project root directory
         String filePath = "logs.csv";
         if (loggingService.exportLogs(filePath, "CSV")) {
             logMessageLabel.setText("日志已成功导出到 " + filePath);
-            logMessageLabel.setTextFill(javafx.scene.paint.Color.GREEN);
+            logMessageLabel.setTextFill(Color.GREEN);
         } else {
             logMessageLabel.setText("日志导出失败。");
-            logMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
+            logMessageLabel.setTextFill(Color.RED);
         }
     }
 
@@ -304,7 +363,7 @@ public class AdminDashboardController {
     private void handleLogout(ActionEvent event) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/banksimulation/view/LoginView.fxml"));
-            com.banksimulation.App app = (com.banksimulation.App) primaryStage.getUserData(); // 获取App实例
+            App app = (App) primaryStage.getUserData(); // Get App instance
 
             fxmlLoader.setControllerFactory(controllerClass -> {
                 if (controllerClass == com.banksimulation.view.LoginController.class) {
@@ -328,10 +387,34 @@ public class AdminDashboardController {
             primaryStage.setTitle("银行模拟系统 - 登录");
             primaryStage.setScene(scene);
             primaryStage.show();
-            loggingService.logAdminAction(currentAdmin.getUsername(), "Logout", "Admin logged out.");
+            loggingService.logAdminAction(loggedInAdmin.getUsername(), "Logout", "Admin logged out.");
         } catch (IOException e) {
             System.err.println("Error loading login view: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Show user management panel and hide other panels
+     * Shows the user management panel and hides other panels.
+     */
+    @FXML
+    private void showUserManagement(ActionEvent event) {
+        userManagementPanel.setVisible(true);
+        userManagementPanel.toFront(); // Bring this panel to the front
+        logViewPanel.setVisible(false);
+        refreshUserList(null); // Refresh user list
+    }
+
+    /**
+     * Show log view panel and hide other panels
+     * Shows the log view panel and hides other panels.
+     */
+    @FXML
+    private void showLogView(ActionEvent event) {
+        logViewPanel.setVisible(true);
+        logViewPanel.toFront(); // Bring this panel to the front
+        userManagementPanel.setVisible(false);
+        refreshLogs(null); // Refresh logs
     }
 }

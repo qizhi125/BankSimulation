@@ -3,9 +3,8 @@ package com.banksimulation.service;
 import com.banksimulation.dao.DataAccessObject;
 import com.banksimulation.entity.Admin;
 import com.banksimulation.entity.ActorType;
-import com.banksimulation.entity.OperationLog;
 import com.banksimulation.entity.User;
-import com.banksimulation.util.PasswordHasher; // 稍后创建这个工具类
+import com.banksimulation.util.PasswordHasher;
 
 import java.util.Optional;
 
@@ -36,10 +35,12 @@ public class AuthenticationService {
             loggingService.logSystemAction("User registration failed: Username '" + user.getUsername() + "' already exists.");
             return false;
         }
-
-        // 密码哈希处理 (在实际应用中，用户传入的密码应在这里被哈希)
-        // 这里假设传入的user对象中的passwordHash已经是哈希过的，如果不是，需要在这里进行哈希
-        // 例如: user.setPasswordHash(PasswordHasher.hashPassword(user.getPasswordHash()));
+        // 检查账号是否已存在
+        if (dao.getUserByAccountNumber(user.getAccountNumber()).isPresent()) {
+            System.out.println("Registration failed: Account number '" + user.getAccountNumber() + "' already exists.");
+            loggingService.logSystemAction("User registration failed: Account number '" + user.getAccountNumber() + "' already exists.");
+            return false;
+        }
 
         dao.saveUser(user);
         System.out.println("User registered: " + user.getUsername());
@@ -58,7 +59,7 @@ public class AuthenticationService {
         Optional<User> userOptional = dao.getUserByUsername(username);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            // 验证密码 (实际应用中，这里需要比较哈希值)
+            // 验证密码
             if (PasswordHasher.verifyPassword(password, user.getPasswordHash())) {
                 if (user.isActive()) {
                     System.out.println("User '" + username + "' logged in successfully.");
@@ -87,7 +88,7 @@ public class AuthenticationService {
         Optional<Admin> adminOptional = dao.getAdminByUsername(username);
         if (adminOptional.isPresent()) {
             Admin admin = adminOptional.get();
-            // 验证密码 (实际应用中，这里需要比较哈希值)
+            // 验证密码
             if (PasswordHasher.verifyPassword(password, admin.getPasswordHash())) {
                 System.out.println("Admin '" + username + "' logged in successfully.");
                 loggingService.logAdminAction(username, "Login successful", "Admin '" + username + "' logged in.");

@@ -1,5 +1,6 @@
 package com.banksimulation.view;
 
+import com.banksimulation.App; // Import App class
 import com.banksimulation.entity.TransactionRecord;
 import com.banksimulation.entity.User;
 import com.banksimulation.service.LoggingService;
@@ -19,6 +20,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.scene.layout.VBox; // Import VBox
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -56,6 +58,21 @@ public class UserDashboardController {
     @FXML private PasswordField confirmNewPasswordField;
     @FXML private Label passwordMessageLabel;
 
+    // 新增的导航按钮
+    @FXML private javafx.scene.control.Button navAccountOverviewButton;
+    @FXML private javafx.scene.control.Button navDepositButton;
+    @FXML private javafx.scene.control.Button navWithdrawButton;
+    @FXML private javafx.scene.control.Button navTransactionHistoryButton;
+    @FXML private javafx.scene.control.Button navChangePasswordButton;
+
+    // 新增的面板容器
+    @FXML private VBox accountOverviewPanel;
+    @FXML private VBox depositPanel;
+    @FXML private VBox withdrawPanel;
+    @FXML private VBox transactionHistoryPanel;
+    @FXML private VBox changePasswordPanel;
+
+
     private final UserService userService;
     private final LoggingService loggingService;
     private final Stage primaryStage;
@@ -74,9 +91,9 @@ public class UserDashboardController {
         // 初始化账户概览
         if (currentUser != null) {
             welcomeLabel.setText("欢迎，" + currentUser.getUsername() + "！");
-            refreshAccountInfo();
             setupTransactionTable();
-            refreshTransactionHistory();
+            // 默认显示账户概览面板
+            showAccountOverview(null);
         }
     }
 
@@ -147,7 +164,7 @@ public class UserDashboardController {
 
     @FXML
     private void refreshTransactionHistory() {
-        // 直接通过loggingService.getDao()访问DAO来获取交易记录
+        // Access DAO directly through loggingService.getDao() to get transaction records
         List<TransactionRecord> transactions = loggingService.getDao().getTransactionsByUserId(currentUser.getUserId());
         ObservableList<TransactionRecord> observableTransactions = FXCollections.observableArrayList(transactions);
         transactionTable.setItems(observableTransactions);
@@ -175,7 +192,7 @@ public class UserDashboardController {
             passwordMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
             return;
         }
-        if (newPassword.length() < 6) { // 简单密码强度检查
+        if (newPassword.length() < 6) { // Simple password strength check
             passwordMessageLabel.setText("新密码至少需要6个字符。");
             passwordMessageLabel.setTextFill(javafx.scene.paint.Color.RED);
             return;
@@ -197,7 +214,7 @@ public class UserDashboardController {
     private void handleLogout(ActionEvent event) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/banksimulation/view/LoginView.fxml"));
-            // 获取App实例，以便注入服务
+            // Get App instance to inject services
             com.banksimulation.App app = (com.banksimulation.App) primaryStage.getUserData();
 
             fxmlLoader.setControllerFactory(controllerClass -> {
@@ -227,5 +244,80 @@ public class UserDashboardController {
             System.err.println("Error loading login view: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Show account overview panel and hide other panels
+     */
+    @FXML
+    private void showAccountOverview(ActionEvent event) {
+        accountOverviewPanel.setVisible(true);
+        accountOverviewPanel.toFront();
+        depositPanel.setVisible(false);
+        withdrawPanel.setVisible(false);
+        transactionHistoryPanel.setVisible(false);
+        changePasswordPanel.setVisible(false);
+        refreshAccountInfo(); // Refresh account info
+    }
+
+    /**
+     * Show deposit panel and hide other panels
+     */
+    @FXML
+    private void showDeposit(ActionEvent event) {
+        depositPanel.setVisible(true);
+        depositPanel.toFront();
+        accountOverviewPanel.setVisible(false);
+        withdrawPanel.setVisible(false);
+        transactionHistoryPanel.setVisible(false);
+        changePasswordPanel.setVisible(false);
+        depositAmountField.clear(); // Clear input
+        depositMessageLabel.setText(""); // Clear message
+    }
+
+    /**
+     * Show withdrawal panel and hide other panels
+     */
+    @FXML
+    private void showWithdraw(ActionEvent event) {
+        withdrawPanel.setVisible(true);
+        withdrawPanel.toFront();
+        accountOverviewPanel.setVisible(false);
+        depositPanel.setVisible(false);
+        transactionHistoryPanel.setVisible(false);
+        changePasswordPanel.setVisible(false);
+        withdrawAmountField.clear(); // Clear input
+        withdrawMessageLabel.setText(""); // Clear message
+    }
+
+    /**
+     * Show transaction history panel and hide other panels
+     */
+    @FXML
+    private void showTransactionHistory(ActionEvent event) {
+        transactionHistoryPanel.setVisible(true);
+        transactionHistoryPanel.toFront();
+        accountOverviewPanel.setVisible(false);
+        depositPanel.setVisible(false);
+        withdrawPanel.setVisible(false);
+        changePasswordPanel.setVisible(false);
+        refreshTransactionHistory(); // Refresh transaction history
+    }
+
+    /**
+     * Show change password panel and hide other panels
+     */
+    @FXML
+    private void showChangePassword(ActionEvent event) {
+        changePasswordPanel.setVisible(true);
+        changePasswordPanel.toFront();
+        accountOverviewPanel.setVisible(false);
+        depositPanel.setVisible(false);
+        withdrawPanel.setVisible(false);
+        transactionHistoryPanel.setVisible(false);
+        oldPasswordField.clear();
+        newPasswordField.clear();
+        confirmNewPasswordField.clear();
+        passwordMessageLabel.setText("");
     }
 }

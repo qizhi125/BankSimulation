@@ -6,7 +6,7 @@ import com.banksimulation.entity.OperationLog;
 import com.banksimulation.entity.TransactionRecord;
 import com.banksimulation.entity.TransactionType;
 import com.banksimulation.entity.User;
-import com.banksimulation.util.PasswordHasher; // 稍后创建这个工具类
+import com.banksimulation.util.PasswordHasher;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +18,7 @@ import java.util.Optional;
 public class UserService {
 
     private final DataAccessObject dao;
-    private final LoggingService loggingService; // 依赖日志服务
+    private final LoggingService loggingService;
 
     public UserService(DataAccessObject dao, LoggingService loggingService) {
         this.dao = dao;

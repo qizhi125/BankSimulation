@@ -1,0 +1,4 @@
+Log ID,Timestamp,Actor Username,Actor Type,Action,Details
+8f0f45dc-d887-41e1-b906-b91de1fa5485,2025-06-03 16:39:35,admin,USER,"Login failed: Invalid credentials","Attempted login with username 'admin'."
+7eab98c0-18ca-4963-a857-a6dec1c31458,2025-06-03 16:39:35,admin,ADMIN,"Login successful","Admin 'admin' logged in."
+fd0753b2-9f9a-41fb-ad66-8914c640885c,2025-06-03 16:39:35,admin,ADMIN,"Get all users","Retrieved 1 users."
