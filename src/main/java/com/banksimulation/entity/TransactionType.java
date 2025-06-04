@@ -6,5 +6,7 @@ package com.banksimulation.entity;
  */
 public enum TransactionType {
     DEPOSIT,    // 存款
-    WITHDRAWAL  // 取款
+    WITHDRAWAL, // 取款
+    TRANSFER_IN, // 转入
+    TRANSFER_OUT // 转出
 }

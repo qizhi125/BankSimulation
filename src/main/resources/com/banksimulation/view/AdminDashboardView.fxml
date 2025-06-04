@@ -16,6 +16,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.layout.GridPane?>
 
+
 <AnchorPane prefHeight="800.0" prefWidth="1020.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.banksimulation.view.AdminDashboardController">
     <children>
         <HBox alignment="TOP_LEFT" prefHeight="800.0" prefWidth="1020.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -40,6 +41,7 @@
                     </Label>
                     <Button fx:id="navUserManagementButton" onAction="#showUserManagement" prefWidth="180.0" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 0;" text="用户管理" />
                     <Button fx:id="navLogViewButton" onAction="#showLogView" prefWidth="180.0" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 0;" text="日志查看" />
+                    <Button fx:id="navAllTransactionsButton" onAction="#showAllTransactions" prefWidth="180.0" style="-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 0;" text="所有交易" />
                     <Region VBox.vgrow="ALWAYS" /> <Button onAction="#handleLogout" prefWidth="180.0" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 0;" text="注销" />
                 </children>
             </VBox>
@@ -106,6 +108,33 @@
                         </columns>
                     </TableView>
                     <Label fx:id="logMessageLabel" textFill="RED" />
+                </VBox>
+
+                <VBox fx:id="allTransactionsPanel" alignment="TOP_CENTER" spacing="20.0" visible="false" StackPane.alignment="TOP_CENTER">
+                    <Label text="所有交易记录" textFill="#2c3e50">
+                        <font>
+                            <Font name="System Bold" size="24.0" />
+                        </font>
+                        <VBox.margin>
+                            <Insets bottom="20.0" />
+                        </VBox.margin>
+                    </Label>
+                    <HBox alignment="CENTER" spacing="10.0">
+                        <Button fx:id="refreshAllTransactionsButton" onAction="#refreshAllTransactions" style="-fx-background-color: #5DADE2; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="刷新所有交易" />
+                    </HBox>
+                    <TableView fx:id="allTransactionsTable" prefHeight="400.0" prefWidth="780.0" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colTransId" prefWidth="100.0" text="交易ID" />
+                            <TableColumn fx:id="colTransUserId" prefWidth="100.0" text="用户ID" />
+                            <TableColumn fx:id="colTransAccountNumber" prefWidth="100.0" text="账号" />
+                            <TableColumn fx:id="colTransType" prefWidth="80.0" text="类型" />
+                            <TableColumn fx:id="colTransAmount" prefWidth="80.0" text="金额" />
+                            <TableColumn fx:id="colTransBalanceAfter" prefWidth="120.0" text="交易后余额" />
+                            <TableColumn fx:id="colTransTimestamp" prefWidth="150.0" text="时间" />
+                            <TableColumn fx:id="colTransDescription" prefWidth="150.0" text="描述" />
+                        </columns>
+                    </TableView>
+                    <Label fx:id="allTransactionsMessageLabel" textFill="RED" />
                 </VBox>
             </StackPane>
         </HBox>

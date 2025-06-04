@@ -3,7 +3,7 @@ package com.banksimulation.view;
 import com.banksimulation.App;
 import com.banksimulation.entity.Admin;
 import com.banksimulation.entity.OperationLog;
-import com.banksimulation.entity.TransactionRecord; // Import TransactionRecord
+import com.banksimulation.entity.TransactionRecord;
 import com.banksimulation.entity.User;
 import com.banksimulation.service.AdminService;
 import com.banksimulation.service.LoggingService;
@@ -32,7 +32,10 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
-import javafx.scene.layout.VBox; // Import VBox
+import javafx.scene.layout.VBox;
+// 移除 TabPane 和 Tab 的导入
+// import javafx.scene.control.TabPane;
+// import javafx.scene.control.Tab;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -42,7 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Administrator Dashboard Controller
+ * 管理员仪表板控制器
  * Controller for the admin dashboard view.
  */
 public class AdminDashboardController {
@@ -69,7 +72,20 @@ public class AdminDashboardController {
     @FXML private TableColumn<OperationLog, String> colDetails;
     @FXML private Label logMessageLabel;
 
-    // FXML elements for permission control
+    // 新增的交易记录表格和列
+    @FXML private TableView<TransactionRecord> allTransactionsTable;
+    @FXML private TableColumn<TransactionRecord, String> colTransId;
+    @FXML private TableColumn<TransactionRecord, String> colTransUserId;
+    @FXML private TableColumn<TransactionRecord, String> colTransAccountNumber;
+    @FXML private TableColumn<TransactionRecord, String> colTransType;
+    @FXML private TableColumn<TransactionRecord, Double> colTransAmount;
+    @FXML private TableColumn<TransactionRecord, Double> colTransBalanceAfter;
+    @FXML private TableColumn<TransactionRecord, String> colTransTimestamp;
+    @FXML private TableColumn<TransactionRecord, String> colTransDescription;
+    @FXML private Label allTransactionsMessageLabel;
+
+
+    // FXML 元素，用于权限控制
     @FXML private Button refreshUserListButton;
     @FXML private Button createUserButton;
     @FXML private Button toggleActiveButton;
@@ -77,48 +93,53 @@ public class AdminDashboardController {
     @FXML private Button deleteUserButton;
     @FXML private Button refreshLogsButton;
     @FXML private Button exportLogsButton;
+    @FXML private Button refreshAllTransactionsButton; // 新增按钮
 
-    // New navigation buttons
-    @FXML private javafx.scene.control.Button navUserManagementButton;
-    @FXML private javafx.scene.control.Button navLogViewButton;
+    // 新增的导航按钮
+    @FXML private Button navUserManagementButton;
+    @FXML private Button navLogViewButton;
+    @FXML private Button navAllTransactionsButton; // 新增导航按钮
 
-    // New panel containers
+    // 新增的面板容器
     @FXML private VBox userManagementPanel;
     @FXML private VBox logViewPanel;
+    @FXML private VBox allTransactionsPanel; // 新增面板
+
+    // 移除 TabPane 引用
+    // @FXML private TabPane adminTabPane;
 
 
     private final AdminService adminService;
     private final UserService userService;
     private final LoggingService loggingService;
     private final Stage primaryStage;
-    private Admin loggedInAdmin; // Current logged-in administrator object (Admin instance)
+    private Admin loggedInAdmin; // 当前登录的管理员对象 (Admin 实例)
 
-    // Constructor, dependency injection via App class
+    // 构造函数，通过App类进行依赖注入
     public AdminDashboardController(AdminService adminService, UserService userService,
                                     LoggingService loggingService, Stage primaryStage, Admin loggedInAdmin) {
         this.adminService = adminService;
         this.userService = userService;
         this.loggingService = loggingService;
         this.primaryStage = primaryStage;
-        this.loggedInAdmin = loggedInAdmin; // Receive Admin object
+        this.loggedInAdmin = loggedInAdmin; // 接收 Admin 对象
     }
 
     @FXML
     public void initialize() {
         if (loggedInAdmin != null) {
             welcomeLabel.setText("欢迎，管理员 " + loggedInAdmin.getUsername() + "！");
-            applyPermissionsToUI(); // Temporarily not implementing fine-grained permission control
             setupUserTable();
             setupLogTable();
-            // Show user management panel by default
+            setupAllTransactionsTable(); // 初始化所有交易表格
+            applyPermissionsToUI(); // 根据管理员权限调整UI
+            // 默认显示用户管理面板
             showUserManagement(null);
         }
     }
 
     /**
-     * Dynamically adjusts the visibility and availability of UI elements based on the current logged-in administrator's permissions.
-     * Note: The current Admin entity does not have fine-grained permission fields, this is just a placeholder.
-     * Actual permission control should be implemented in AdminService.
+     * 根据当前登录管理员的权限，动态调整UI元素的可见性和可用性。
      */
     private void applyPermissionsToUI() {
         if (loggedInAdmin == null) {
@@ -126,31 +147,33 @@ public class AdminDashboardController {
             return;
         }
 
-        // By default, all administrators have these permissions, unless corresponding boolean fields are added to the Admin entity
-        // For example:
-        // createUserButton.setManaged(loggedInAdmin.canCreateUsers());
-        // createUserButton.setVisible(loggedInAdmin.canCreateUsers());
+        boolean isTopLevel = loggedInAdmin.isTopLevelAdmin();
 
-        // For simplicity, all administrator UI elements are currently visible, actual permission control is in the service layer
+        // 用户管理相关权限
         createUserButton.setManaged(true);
         createUserButton.setVisible(true);
         toggleActiveButton.setManaged(true);
         toggleActiveButton.setVisible(true);
-        modifyPermissionsButton.setManaged(true);
-        modifyPermissionsButton.setVisible(true);
+        modifyPermissionsButton.setManaged(isTopLevel); // 只有顶级管理员可以修改权限
+        modifyPermissionsButton.setVisible(isTopLevel);
         deleteUserButton.setManaged(true);
-        deleteUserButton.setVisible(true);
+        deleteUserButton.setVisible(true); // 删除用户，但逻辑层会限制非顶级管理员删除顶级管理员
+
+        // 日志查看和交易记录权限 (所有管理员都可以查看)
         refreshLogsButton.setManaged(true);
         refreshLogsButton.setVisible(true);
         exportLogsButton.setManaged(true);
         exportLogsButton.setVisible(true);
-        logTable.setManaged(true);
-        logTable.setVisible(true);
+        refreshAllTransactionsButton.setManaged(true);
+        refreshAllTransactionsButton.setVisible(true);
 
+        // 导航按钮
         navUserManagementButton.setManaged(true);
         navUserManagementButton.setVisible(true);
         navLogViewButton.setManaged(true);
         navLogViewButton.setVisible(true);
+        navAllTransactionsButton.setManaged(true); // 所有管理员都可以查看所有交易
+        navAllTransactionsButton.setVisible(true);
     }
 
 
@@ -173,6 +196,18 @@ public class AdminDashboardController {
         colActorType.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getActorType().name()));
         colAction.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getAction()));
         colDetails.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDetails()));
+    }
+
+    private void setupAllTransactionsTable() {
+        colTransId.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getTransactionId()));
+        colTransUserId.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getUserId()));
+        colTransAccountNumber.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getAccountNumber()));
+        colTransType.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getType().name()));
+        colTransAmount.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getAmount()).asObject());
+        colTransBalanceAfter.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getBalanceAfterTransaction()).asObject());
+        colTransTimestamp.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getTimestamp().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
+        colTransDescription.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDescription()));
     }
 
     @FXML
@@ -242,7 +277,7 @@ public class AdminDashboardController {
             if (adminService.createUser(loggedInAdmin.getUsername(), newUser)) {
                 userManagementMessageLabel.setText("用户 '" + username + "' 创建成功！");
                 userManagementMessageLabel.setTextFill(Color.GREEN);
-                refreshUserList(null); // Refresh user list
+                refreshUserList(null); // 刷新用户列表
             } else {
                 userManagementMessageLabel.setText("创建用户失败：用户名或账号可能已存在。");
                 userManagementMessageLabel.setTextFill(Color.RED);
@@ -259,11 +294,19 @@ public class AdminDashboardController {
             return;
         }
 
+        // 检查是否尝试修改顶级管理员
+        Optional<Admin> targetAdmin = adminService.getAdminByUsername(selectedUser.getUsername());
+        if (targetAdmin.isPresent() && targetAdmin.get().isTopLevelAdmin() && !loggedInAdmin.isTopLevelAdmin()) {
+            userManagementMessageLabel.setText("您没有权限修改顶级管理员的状态。");
+            userManagementMessageLabel.setTextFill(Color.RED);
+            return;
+        }
+
         boolean newStatus = !selectedUser.isActive();
         if (adminService.toggleUserLoginStatus(loggedInAdmin.getUsername(), selectedUser.getUsername(), newStatus)) {
             userManagementMessageLabel.setText("用户 '" + selectedUser.getUsername() + "' 登录状态已切换为 " + (newStatus ? "激活" : "禁用") + "。");
             userManagementMessageLabel.setTextFill(Color.GREEN);
-            refreshUserList(null); // Refresh user list
+            refreshUserList(null); // 刷新用户列表
         } else {
             userManagementMessageLabel.setText("切换登录状态失败。");
             userManagementMessageLabel.setTextFill(Color.RED);
@@ -275,6 +318,13 @@ public class AdminDashboardController {
         User selectedUser = userTable.getSelectionModel().getSelectedItem();
         if (selectedUser == null) {
             userManagementMessageLabel.setText("请选择一个用户。");
+            userManagementMessageLabel.setTextFill(Color.RED);
+            return;
+        }
+
+        // 只有顶级管理员有权限修改用户权限
+        if (!loggedInAdmin.isTopLevelAdmin()) {
+            userManagementMessageLabel.setText("您没有权限修改用户权限。只有顶级管理员可以执行此操作。");
             userManagementMessageLabel.setTextFill(Color.RED);
             return;
         }
@@ -306,7 +356,7 @@ public class AdminDashboardController {
             if (adminService.modifyUserPermissions(loggedInAdmin.getUsername(), selectedUser.getUsername(), newPermissions)) {
                 userManagementMessageLabel.setText("用户 '" + selectedUser.getUsername() + "' 权限修改成功！");
                 userManagementMessageLabel.setTextFill(Color.GREEN);
-                refreshUserList(null); // Refresh user list
+                refreshUserList(null); // 刷新用户列表
             } else {
                 userManagementMessageLabel.setText("修改权限失败。");
                 userManagementMessageLabel.setTextFill(Color.RED);
@@ -323,6 +373,20 @@ public class AdminDashboardController {
             return;
         }
 
+        // 检查是否尝试删除顶级管理员
+        Optional<Admin> targetAdmin = adminService.getAdminByUsername(selectedUser.getUsername());
+        if (targetAdmin.isPresent() && targetAdmin.get().isTopLevelAdmin() && !loggedInAdmin.isTopLevelAdmin()) {
+            userManagementMessageLabel.setText("您没有权限删除顶级管理员。");
+            userManagementMessageLabel.setTextFill(Color.RED);
+            return;
+        }
+        // 检查是否尝试删除自己
+        if (selectedUser.getUsername().equals(loggedInAdmin.getUsername())) {
+            userManagementMessageLabel.setText("您不能删除您自己的账户。");
+            userManagementMessageLabel.setTextFill(Color.RED);
+            return;
+        }
+
         Alert confirmDelete = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDelete.setTitle("确认删除");
         confirmDelete.setHeaderText("您确定要删除用户 '" + selectedUser.getUsername() + "' 吗？");
@@ -330,11 +394,14 @@ public class AdminDashboardController {
 
         Optional<ButtonType> result = confirmDelete.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            // Access DAO directly through loggingService.getDao() to delete user
-            loggingService.getDao().deleteUser(selectedUser.getUserId());
-            userManagementMessageLabel.setText("用户 '" + selectedUser.getUsername() + "' 已删除。");
-            userManagementMessageLabel.setTextFill(Color.GREEN);
-            refreshUserList(null); // Refresh user list
+            if (adminService.deleteUser(loggedInAdmin.getUsername(), selectedUser.getUsername())) {
+                userManagementMessageLabel.setText("用户 '" + selectedUser.getUsername() + "' 已删除。");
+                userManagementMessageLabel.setTextFill(Color.GREEN);
+                refreshUserList(null); // 刷新用户列表
+            } else {
+                userManagementMessageLabel.setText("删除用户失败。");
+                userManagementMessageLabel.setTextFill(Color.RED);
+            }
         }
     }
 
@@ -348,7 +415,7 @@ public class AdminDashboardController {
 
     @FXML
     private void handleExportLogs(ActionEvent event) {
-        // Export to logs.csv file in the project root directory
+        // 简单导出到项目根目录下的 logs.csv 文件
         String filePath = "logs.csv";
         if (loggingService.exportLogs(filePath, "CSV")) {
             logMessageLabel.setText("日志已成功导出到 " + filePath);
@@ -360,10 +427,18 @@ public class AdminDashboardController {
     }
 
     @FXML
+    private void refreshAllTransactions(ActionEvent event) {
+        List<TransactionRecord> transactions = adminService.getAllTransactions(loggedInAdmin.getUsername());
+        ObservableList<TransactionRecord> observableTransactions = FXCollections.observableArrayList(transactions);
+        allTransactionsTable.setItems(observableTransactions);
+        allTransactionsMessageLabel.setText("");
+    }
+
+    @FXML
     private void handleLogout(ActionEvent event) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/banksimulation/view/LoginView.fxml"));
-            App app = (App) primaryStage.getUserData(); // Get App instance
+            App app = (App) primaryStage.getUserData(); // 获取App实例
 
             fxmlLoader.setControllerFactory(controllerClass -> {
                 if (controllerClass == com.banksimulation.view.LoginController.class) {
@@ -395,26 +470,41 @@ public class AdminDashboardController {
     }
 
     /**
-     * Show user management panel and hide other panels
-     * Shows the user management panel and hides other panels.
+     * 显示用户管理面板并隐藏其他面板
      */
     @FXML
     private void showUserManagement(ActionEvent event) {
         userManagementPanel.setVisible(true);
-        userManagementPanel.toFront(); // Bring this panel to the front
+        userManagementPanel.toFront();
         logViewPanel.setVisible(false);
-        refreshUserList(null); // Refresh user list
+        allTransactionsPanel.setVisible(false);
+        refreshUserList(null);
+        // 移除了 adminTabPane.getSelectionModel().select(0);
     }
 
     /**
-     * Show log view panel and hide other panels
-     * Shows the log view panel and hides other panels.
+     * 显示日志查看面板并隐藏其他面板
      */
     @FXML
     private void showLogView(ActionEvent event) {
         logViewPanel.setVisible(true);
-        logViewPanel.toFront(); // Bring this panel to the front
+        logViewPanel.toFront();
         userManagementPanel.setVisible(false);
-        refreshLogs(null); // Refresh logs
+        allTransactionsPanel.setVisible(false);
+        refreshLogs(null);
+        // 移除了 adminTabPane.getSelectionModel().select(1);
+    }
+
+    /**
+     * 显示所有交易面板并隐藏其他面板
+     */
+    @FXML
+    private void showAllTransactions(ActionEvent event) {
+        allTransactionsPanel.setVisible(true);
+        allTransactionsPanel.toFront();
+        userManagementPanel.setVisible(false);
+        logViewPanel.setVisible(false);
+        refreshAllTransactions(null);
+        // 移除了 adminTabPane.getSelectionModel().select(2);
     }
 }

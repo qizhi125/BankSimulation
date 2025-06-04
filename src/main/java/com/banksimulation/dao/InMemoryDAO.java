@@ -4,10 +4,10 @@ import com.banksimulation.entity.Admin;
 import com.banksimulation.entity.OperationLog;
 import com.banksimulation.entity.TransactionRecord;
 import com.banksimulation.entity.User;
-import com.banksimulation.util.PasswordHasher;
+import com.banksimulation.util.PasswordHasher; // 引入密码哈希工具类
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,31 +23,50 @@ public class InMemoryDAO implements DataAccessObject {
 
     // 使用 ConcurrentHashMap 保证多线程安全，尽管在这个单机模拟中可能不是严格必需，但良好的实践。
     private final Map<String, User> users = new ConcurrentHashMap<>(); // Key: userId
+    private final Map<String, User> usersByAccountNumber = new ConcurrentHashMap<>(); // Key: accountNumber
     private final Map<String, Admin> admins = new ConcurrentHashMap<>(); // Key: adminId
-    private final Map<String, TransactionRecord> transactions = new ConcurrentHashMap<>(); // Key: transactionId
-    private final Map<String, OperationLog> logs = new ConcurrentHashMap<>(); // Key: logId
+    private final List<TransactionRecord> transactions = new ArrayList<>(); // 简单列表
+    private final List<OperationLog> logs = new ArrayList<>(); // 简单列表
 
     // 为了方便测试，可以预设一些数据
     public InMemoryDAO() {
-        // 预设一个管理员账户
-        String adminPasswordPlain = "admin123"; // 默认管理员明文密码
+        // 预设一个顶级管理员账户
+        String adminPasswordPlain = "admin"; // 默认管理员明文密码
         String adminPasswordHashed = PasswordHasher.hashPassword(adminPasswordPlain);
-        Admin defaultAdmin = new Admin("admin", adminPasswordHashed);
+        Admin defaultAdmin = new Admin("admin", adminPasswordHashed, true); // 设为顶级管理员
         admins.put(defaultAdmin.getAdminId(), defaultAdmin);
-        System.out.println("InMemoryDAO: Default admin created: " + defaultAdmin.getUsername() + " with password: " + adminPasswordPlain);
+        System.out.println("InMemoryDAO: Default top-level admin created: " + defaultAdmin.getUsername() + " with password: " + adminPasswordPlain);
 
         // 预设一个普通用户账户
-        String userPasswordPlain = "password123"; // 默认用户明文密码
+        String userPasswordPlain = "userpass"; // 默认用户明文密码
         String userPasswordHashed = PasswordHasher.hashPassword(userPasswordPlain);
-        User defaultUser = new User("user1", userPasswordHashed, "John", "Doe", "1000010001");
+        User defaultUser = new User("user1", userPasswordHashed, "John", "Doe", "100001");
         users.put(defaultUser.getUserId(), defaultUser);
+        usersByAccountNumber.put(defaultUser.getAccountNumber(), defaultUser);
         System.out.println("InMemoryDAO: Default user created: " + defaultUser.getUsername() + " with password: " + userPasswordPlain);
+
+        // 预设一个非顶级管理员账户 (用于测试权限限制)
+        String subAdminPasswordPlain = "subadmin";
+        String subAdminPasswordHashed = PasswordHasher.hashPassword(subAdminPasswordPlain);
+        Admin subAdmin = new Admin("subadmin", subAdminPasswordHashed, false); // 非顶级管理员
+        admins.put(subAdmin.getAdminId(), subAdmin);
+        System.out.println("InMemoryDAO: Sub-admin created: " + subAdmin.getUsername() + " with password: " + subAdminPasswordPlain);
+
+        // 预设另一个普通用户账户用于转账测试
+        String user2PasswordPlain = "user2pass";
+        String user2PasswordHashed = PasswordHasher.hashPassword(user2PasswordPlain);
+        User user2 = new User("user2", user2PasswordHashed, "Jane", "Smith", "100002");
+        user2.setBalance(500.0); // 给user2一些初始余额
+        users.put(user2.getUserId(), user2);
+        usersByAccountNumber.put(user2.getAccountNumber(), user2);
+        System.out.println("InMemoryDAO: Default user2 created: " + user2.getUsername() + " with password: " + user2PasswordPlain + ", balance: " + user2.getBalance());
     }
 
     // --- User operations ---
     @Override
     public void saveUser(User user) {
         users.put(user.getUserId(), user);
+        usersByAccountNumber.put(user.getAccountNumber(), user); // 维护按账号查找的Map
         System.out.println("User saved: " + user.getUsername());
     }
 
@@ -60,13 +79,11 @@ public class InMemoryDAO implements DataAccessObject {
 
     @Override
     public Optional<User> getUserByAccountNumber(String accountNumber) {
-        return users.values().stream()
-                .filter(user -> user.getAccountNumber().equals(accountNumber))
-                .findFirst();
+        return Optional.ofNullable(usersByAccountNumber.get(accountNumber));
     }
 
     @Override
-    public Optional<User> getUserByUserId(String userId) {
+    public Optional<User> getUserByUserId(String userId) { // 实现新增的方法
         return Optional.ofNullable(users.get(userId));
     }
 
@@ -79,22 +96,31 @@ public class InMemoryDAO implements DataAccessObject {
     public void updateUser(User user) {
         // 假设用户已存在，直接覆盖
         users.put(user.getUserId(), user);
+        usersByAccountNumber.put(user.getAccountNumber(), user); // 更新按账号查找的Map
         System.out.println("User updated: " + user.getUsername());
     }
 
     @Override
     public void deleteUser(String userId) {
-        users.remove(userId);
-        // 同时删除相关交易记录和日志（根据业务需求，这里简单处理）
-        transactions.values().removeIf(t -> t.getUserId().equals(userId));
-        logs.values().removeIf(l -> {
-            // 尝试获取被删除用户的用户名，如果用户已不存在，则安全处理
-            Optional<User> deletedUserOptional = users.values().stream()
-                    .filter(u -> u.getUserId().equals(userId))
-                    .findFirst();
-            return deletedUserOptional.isPresent() && l.getActorUsername().equals(deletedUserOptional.get().getUsername());
-        });
-        System.out.println("User deleted: " + userId);
+        // 获取被删除用户的用户名和账号，以便在日志中正确记录并从usersByAccountNumber中移除
+        Optional<User> userToDeleteOptional = users.values().stream()
+                .filter(user -> user.getUserId().equals(userId))
+                .findFirst();
+        if (userToDeleteOptional.isPresent()) {
+            User userToDelete = userToDeleteOptional.get();
+            String username = userToDelete.getUsername();
+            String accountNumber = userToDelete.getAccountNumber();
+
+            users.remove(userId);
+            usersByAccountNumber.remove(accountNumber); // 从按账号查找的Map中移除
+
+            // 同时删除相关交易记录和日志
+            transactions.removeIf(t -> t.getUserId().equals(userId));
+            logs.removeIf(l -> l.getActorUsername().equals(username) && l.getActorType() == com.banksimulation.entity.ActorType.USER);
+            System.out.println("User deleted: " + username + " (ID: " + userId + ")");
+        } else {
+            System.out.println("Attempted to delete non-existent user with ID: " + userId);
+        }
     }
 
     // --- Admin operations ---
@@ -112,11 +138,6 @@ public class InMemoryDAO implements DataAccessObject {
     }
 
     @Override
-    public Optional<Admin> getAdminByAdminId(String adminId) {
-        return Optional.ofNullable(admins.get(adminId));
-    }
-
-    @Override
     public List<Admin> getAllAdmins() {
         return new ArrayList<>(admins.values());
     }
@@ -130,38 +151,38 @@ public class InMemoryDAO implements DataAccessObject {
     // --- TransactionRecord operations ---
     @Override
     public void saveTransaction(TransactionRecord transaction) {
-        transactions.put(transaction.getTransactionId(), transaction);
+        transactions.add(transaction);
         System.out.println("Transaction saved: " + transaction.getTransactionId());
     }
 
     @Override
     public List<TransactionRecord> getTransactionsByUserId(String userId) {
-        return transactions.values().stream()
+        return transactions.stream()
                 .filter(t -> t.getUserId().equals(userId))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<TransactionRecord> getTransactionsByAccountNumber(String accountNumber) {
-        return transactions.values().stream()
+        return transactions.stream()
                 .filter(t -> t.getAccountNumber().equals(accountNumber))
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<TransactionRecord> getAllTransactions() {
-        return new ArrayList<>(transactions.values());
+        return new ArrayList<>(transactions);
     }
 
     // --- OperationLog operations ---
     @Override
     public void saveLog(OperationLog log) {
-        logs.put(log.getLogId(), log);
+        logs.add(log);
         System.out.println("Log saved: " + log.getAction());
     }
 
     @Override
     public List<OperationLog> getAllLogs() {
-        return new ArrayList<>(logs.values());
+        return new ArrayList<>(logs);
     }
 }

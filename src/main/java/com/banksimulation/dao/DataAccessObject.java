@@ -18,7 +18,7 @@ public interface DataAccessObject {
     void saveUser(User user);
     Optional<User> getUserByUsername(String username);
     Optional<User> getUserByAccountNumber(String accountNumber);
-    Optional<User> getUserByUserId(String userId); // 添加通过ID获取用户的方法
+    Optional<User> getUserByUserId(String userId); // 新增：根据用户ID获取用户
     List<User> getAllUsers();
     void updateUser(User user);
     void deleteUser(String userId);
@@ -26,7 +26,6 @@ public interface DataAccessObject {
     // Admin operations
     void saveAdmin(Admin admin);
     Optional<Admin> getAdminByUsername(String username);
-    Optional<Admin> getAdminByAdminId(String adminId); // 添加通过ID获取管理员的方法
     List<Admin> getAllAdmins();
     void updateAdmin(Admin admin); // For password changes etc.
 
